@@ -11,17 +11,23 @@ import {
   mergeMap,
   catchError,
   mapTo,
+  pairwise,
+  scan,
+  withLatestFrom,
 } from 'rxjs/operators';
 import {
   combineLatest,
   concat,
   empty,
   forkJoin,
+  fromEvent,
   interval,
   merge,
   of,
+  race,
   throwError,
   timer,
+  zip,
 } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 
@@ -57,10 +63,30 @@ export class OperatorsComponent implements OnInit {
     // this.forkJoinExample2();
     // this.forkJoinExample3();
     // this.forkJoinExample4();
-    this.forkJoinExample5();
+    // this.forkJoinExample5();
 
     // merge
-    this.mergeExample1();
+    // this.mergeExample1();
+
+    // pairwise
+    // this.pairwiseExample();
+
+    // race
+    // this.raceExample();
+    // this.raceExample1();
+
+    // startWith
+    // this.startWithExample();
+    // this.startWithExample1();
+    // this.startWithExample2();
+
+    // withLatestFrom
+    // this.withLatestFromExample();
+    // this.withLatestFromExample2();
+
+    // zip
+    // this.zipExample();
+    // this.zipExample2();
   }
 
   observer = {
@@ -293,5 +319,122 @@ export class OperatorsComponent implements OnInit {
   mergeExample2 = () => {
     const first = interval(2500);
     const second = interval(1000);
-  }
+  };
+
+  //================================================================================================================================
+  // pairwise
+  pairwiseExample = () => {
+    interval(1000).pipe(pairwise(), take(5)).subscribe(console.log);
+  };
+
+  //=================================================================================================================================
+  // race
+  // race with 4 observables
+
+  raceExample = () => {
+    const example = race(
+      interval(1500),
+      interval(1500),
+      interval(1000).pipe(mapTo('1s won!')),
+      interval(2000),
+      interval(2500)
+    );
+    example.subscribe((val) => console.log(val));
+  };
+
+  // race with an error
+  raceExample1 = () => {
+    const first = of('first').pipe(
+      delay(100),
+      map((_) => {
+        throw 'error';
+      })
+    );
+    const second = of('second').pipe(delay(200));
+    const third = of('third').pipe(delay(300));
+    race(first, second, third).subscribe((val) => console.log(val));
+  };
+
+  //========================================================================================================================
+  // startWith
+  // startWith on number sequence
+  startWithExample = () => {
+    const source = of(1, 2, 3);
+    const example = source.pipe(startWith(0));
+    example.subscribe((val) => console.log(val));
+  };
+
+  // startWith for initial scan value
+  startWithExample1 = () => {
+    const source = of('World!', 'Goodbye', 'World!');
+    const example = source.pipe(
+      startWith('Hello'),
+      scan((acc, curr) => `${acc} ${curr}`)
+    );
+
+    example.subscribe((val) => console.log(val));
+  };
+
+  // startWith multiple values
+  startWithExample2 = () => {
+    const source = interval(1000);
+    const example = source.pipe(startWith(-3, -2, -1));
+    example.subscribe((val) => console.log(val));
+  };
+
+  //======================================================================================================================
+  // withLatestFrom
+  // Latest value form quicker second source
+  withLatestFromExample = () => {
+    const source = interval(5000);
+    const secondSource = interval(1000);
+    const example = source.pipe(
+      withLatestFrom(secondSource),
+      map(([first, second]) => {
+        return `First Source (5s): ${first} second Source (1s): ${second}`;
+      })
+    );
+
+    example.subscribe((val) => console.log(val));
+  };
+
+  // Slower second source
+  withLatestFromExample2 = () => {
+    const source = interval(5000);
+    const secondSource = interval(1000);
+    const example = secondSource.pipe(
+      withLatestFrom(source),
+      map(([first, second]) => {
+        return `Source (1): ${first} Latest From (5s): ${second}`;
+      })
+    );
+    example.subscribe((val) => console.log(val));
+  };
+
+  //==============================================================================================================================
+  // zip
+  // zip multiple observables emitting at alternate intervals
+  zipExample = () => {
+    const sourceOne = of('Hello');
+    const sourceTwo = of('World!');
+    const sourceThree = of('Goodbye');
+    const sourceFour = of('World!');
+
+    const example = zip(
+      sourceOne,
+      sourceTwo.pipe(delay(1000)),
+      sourceThree.pipe(delay(2000)),
+      sourceFour.pipe(delay(3000))
+    );
+    example.subscribe((val) => console.log(val));
+  };
+
+  // zip when 1 observable completes
+  zipExample2 = () => {
+    const source = interval(1000);
+    const example = zip(source, source.pipe(take(2)));
+    example.subscribe((val) => console.log(val));
+  };
+
+  
 }
