@@ -5,10 +5,14 @@ import {
   delay,
   empty,
   every,
+  from,
+  fromEvent,
   iif,
   interval,
   mergeMap,
   of,
+  sequenceEqual,
+  switchMap,
   tap,
 } from 'rxjs';
 
@@ -31,7 +35,10 @@ export class ConditionalComponent implements OnInit {
     // this.everyExample3();
 
     // iif
-    this.iifExample();
+    // this.iifExample();
+
+    // sequenceEqual
+    this.sequenceEqualExample();
   }
 
   //============================================================================================================================
@@ -94,6 +101,17 @@ export class ConditionalComponent implements OnInit {
 
     interval(1000)
       .pipe(mergeMap((v) => iif(() => v % 4 === 0, r$, x$)))
+      .subscribe(console.log);
+  };
+
+  //==============================================================================================================================
+  // sequenceEqual
+  // Simple sequenceEqual
+  sequenceEqualExample = () => {
+    const expectedSequence = from([4, 5, 6]);
+
+    of([1, 2, 3], [4, 5, 6], [7, 8, 9])
+      .pipe(switchMap((arr) => from(arr).pipe(sequenceEqual(expectedSequence))))
       .subscribe(console.log);
   };
 }
